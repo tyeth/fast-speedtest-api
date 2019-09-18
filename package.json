@@ -1,6 +1,6 @@
 {
   "name": "fast-speedtest-api",
-  "version": "0.3.2",
+  "version": "0.3.2.1",
   "description": "A speed test powered by fast.com",
   "main": "./src/Api.js",
   "engines": {
@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/branchard/fast-speedtest-api.git"
+    "url": "git+https://github.com/tyeth/fast-speedtest-api.git"
   },
-  "author": "branchard",
+  "author": "tyeth",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/branchard/fast-speedtest-api/issues"
+    "url": "https://github.com/tyeth/fast-speedtest-api/issues"
   },
-  "homepage": "https://github.com/branchard/fast-speedtest-api#readme",
+  "homepage": "https://github.com/tyeth/fast-speedtest-api#readme",
   "keywords": [
     "speedtest",
     "speed",
@@ -43,7 +43,7 @@
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.14.0",
     "mocha": "^5.2.0",
-    "release-it": "^9.8.1"
+    "release-it": "^12.4.1"
   },
   "dependencies": {
     "https-proxy-agent": "^2.2.2"

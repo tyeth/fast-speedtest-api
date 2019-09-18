@@ -22,9 +22,6 @@ class Api {
       throw new Error('You must define options in Api constructor');
     }
 
-    if (!options.token) {
-      throw new Error('You must define app token');
-    }
 
     if (options.unit && typeof options.unit !== 'function') {
       throw new Error('Invalid unit');
@@ -37,7 +34,7 @@ class Api {
     this.token = options.token;
     this.verbose = options.verbose || false;
     this.timeout = options.timeout || DEFAULT_SPEEDTEST_TIMEOUT;
-    this.https = options.https == null ? true : Boolean(options.https);
+    this.https = options.https = true;
     this.urlCount = options.urlCount || DEFAULT_URL_COUNT;
     this.bufferSize = options.bufferSize || DEFAULT_BUFFER_SIZE;
     this.unit = options.unit || Api.UNITS.Bps;
@@ -60,6 +57,25 @@ class Api {
     return arrWithoutNulls.reduce((a, b) => a + b) / arrWithoutNulls.length;
   }
 
+  async getNewToken() {
+    var scriptToken = "YXNkZmFzZGxmbnNkYWZoYXNkZmhrYWxm";
+    try {
+      var options = url.parse("https://fast.com/");
+      options.contentType = "text/html";
+      const clientRequest1 = await this.get(options);
+      // fetch in-page javascript (format "xxxx.js" )
+      var script = /"(.*?\.js)"/gmi.exec(clientRequest1.response.data)[1];
+
+      options = url.parse("https://fast.com" + script);
+      options.contentType = "javascript";
+      const clientRequest2 = await this.get(options);
+      // grab token from JS response (format token:"xxx")
+      scriptToken = /token:"(.*?)"/gmi.exec(clientRequest2.response.data)[1];
+
+    } finally {
+      return scriptToken;
+    }
+  }
 
   /**
    * Get data from the specified URL
@@ -69,17 +85,23 @@ class Api {
    * @return {Promise} The request and response from the URL
    */
   async get(options) {
+    let myContentType = 'json';
+    if (options.contentType) myContentType = options.contentType;
     return new Promise((resolve, reject) => {
       const request = (this.https ? https : http).get(options, (response) => {
-        if (response.headers['content-type'].includes('json')) {
+        if (response.headers['content-type'].includes(myContentType)) {
           response.setEncoding('utf8');
           let rawData = '';
           response.on('data', (chunk) => {
             rawData += chunk;
           });
           response.on('end', () => {
-            const parsedData = JSON.parse(rawData);
-            response.data = parsedData;
+            if (myContentType.includes ("json")) {
+              const parsedData = JSON.parse(rawData);
+              response.data = parsedData;
+            } else {
+              response.data = rawData;
+            }
             resolve({
               response,
               request,
@@ -110,6 +132,7 @@ class Api {
       while (targets.length < this.urlCount) {
         const target = `http${this.https ? 's' : ''}://api.fast.com/netflix/speedtest?https=${this.https ? 'true' : 'false'}&token=${this.token}&urlCount=${this.urlCount - targets.length}`;
         const options = url.parse(target);
+        options.contentType = "json";
         if (this.proxy) options.agent = this.proxy;
         /* eslint-disable no-await-in-loop */
         const { response } = await this.get(options);
@@ -148,6 +171,7 @@ class Api {
   async getSpeed() {
     let targets = null;
     try {
+      if (!this.token || this.token == 'YXNkZmFzZGxmbnNkYWZoYXNkZmhrYWxm') this.token = await this.getNewToken();
       targets = await this.getTargets();
     } catch (e) {
       throw e;
@@ -161,7 +185,8 @@ class Api {
     });
 
     targets.forEach(async (target) => {
-      const {response, request} = await this.get(target);
+      if (target == undefined) return;
+      const { response, request } = await this.get(target);
       requestList.push(request);
       response.on('data', (data) => {
         bytes += data.length;

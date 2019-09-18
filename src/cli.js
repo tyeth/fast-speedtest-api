@@ -30,10 +30,6 @@ function getArgParam(argName, fullArgName) {
 
 /* eslint-enable require-jsdoc */
 
-if (!token || typeof token !== 'string') {
-  throw new Error('You must define an app token');
-}
-
 const verbose = restArgs.includes('-v') || restArgs.includes('--verbose');
 const https = !restArgs.includes('-n') && !restArgs.includes('--no-https');
 const rawOutput = restArgs.includes('-r') || restArgs.includes('--raw');
